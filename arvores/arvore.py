@@ -1,3 +1,4 @@
+
 class NoArvore:
     def __init__(self, data):
         self.data = data
@@ -26,7 +27,21 @@ class ArvoreBinaria:
         if no.dir:
             self.percursoSimetrico(no.dir)
             #print(')', end='')
+    
+    def altura(self, no=None):
+        altEsq = 0
+        altDir = 0
+        
+        if no is None:
+            no = self.raiz
+        if no.esq:
+            altEsq = self.altura(no.esq)
+        if no.dir:
+            altDir = self.altura(no.dir)
 
+        if altEsq > altDir:
+            return altEsq + 1
+        return altDir + 1
 
 
 if __name__ == "__main__":
@@ -61,3 +76,4 @@ if __name__ == "__main__":
     tree.raiz = n2
 
     tree.percursoSimetrico()
+    print(f"Altura da árvore: {tree.altura()}")
