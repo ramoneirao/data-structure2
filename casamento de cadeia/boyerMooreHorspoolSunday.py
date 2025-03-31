@@ -24,6 +24,15 @@ def boyer_moore_horspool_sunday(text, pattern):
     
     while shift <= n - m:
         print(f"Iteração {iteration}: Padrão alinhado na posição {shift}")
+        
+        # Exibição vertical do alinhamento
+        for i in range(m):
+            if shift + i < n:
+                print(f"{text[shift + i]} - {pattern[i]}")
+            else:
+                print(f"  - {pattern[i]}")
+        print()
+        
         j = m - 1
         while j >= 0 and pattern[j] == text[shift + j]:
             print(f"  Casamento no índice {shift + j} ({pattern[j]})")

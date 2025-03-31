@@ -26,6 +26,16 @@ def good_suffix_heuristic(pattern):
     
     return suffix
 
+def print_alignment(text, pattern, shift):
+    """Exibe o alinhamento do padrão com o texto em formato vertical."""
+    print("Alinhamento vertical:")
+    for i in range(len(text)):
+        if i < shift or i >= shift + len(pattern):
+            print(f"{text[i]}")  # Apenas o texto
+        else:
+            print(f"{text[i]} {pattern[i - shift]}")  # Texto e padrão alinhados
+    print()
+
 def boyer_moore(text, pattern):
     m = len(pattern)
     n = len(text)
@@ -39,9 +49,11 @@ def boyer_moore(text, pattern):
     matches = []
     shift = 0
     iteration = 1
+    changes = []  # Lista para armazenar as mudanças no padrão
     
     while shift <= n - m:
         print(f"Iteração {iteration}: Padrão alinhado na posição {shift}")
+        print_alignment(text, pattern, shift)  # Exibe o alinhamento atual
         j = m - 1
         while j >= 0 and pattern[j] == text[shift + j]:
             print(f"  Casamento no índice {shift + j} ({pattern[j]})")
@@ -56,7 +68,22 @@ def boyer_moore(text, pattern):
             good_suffix_shift = good_suffix[j]
             shift += max(bad_char_shift, good_suffix_shift)
             print(f"  Deslocamento: heurística ocorrência = {bad_char_shift}, heurística casamento = {good_suffix_shift}, deslocando para {shift}")
+        
+        # Armazena o estado atual do padrão e o deslocamento
+        changes.append((iteration, shift))
         iteration += 1
+    
+    # # Exibe as mudanças no padrão durante as iterações em formato de matriz
+    # print("\nMudanças no padrão durante as iterações (formato de matriz):")
+    # for change in changes:
+    #     iteration, shift = change
+    #     print(f"Iteração {iteration}")
+    #     for i in range(len(text)):
+    #         if i < shift or i >= shift + len(pattern):
+    #             print(f"{text[i]}")
+    #         else:
+    #             print(f"{text[i]} {pattern[i - shift]}")
+    #     print()
     
     return matches
 
