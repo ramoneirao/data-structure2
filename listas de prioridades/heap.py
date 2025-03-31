@@ -1,100 +1,82 @@
-class Heap:
-    def __init__(self):
-        # Usamos uma lista para armazenar os elementos do heap
-        self.heap = []
+import math
 
-    def insert(self, item):
-        """Insere um item no heap."""
-        self.heap.append(item)
-        self._heapify_up(len(self.heap) - 1)
+def troca(A, i, j):
+    A[i], A[j] = A[j], A[i]
 
-    def remove(self):
-        """Remove e retorna o menor item do heap."""
-        if self.is_empty():
-            raise IndexError("O heap está vazio.")
-        if len(self.heap) == 1:
-            return self.heap.pop()
-        root = self.heap[0]
-        # Substitui a raiz pelo último elemento e reorganiza o heap
-        self.heap[0] = self.heap.pop()
-        self._heapify_down(0)
-        return root
+def muda_prioridade(A, i, chave):
+    if A[i] > chave:
+        A[i] = chave
+        heap_diminui_chave(A, len(A) - 1, i)
+    else:
+        A[i] = chave
+        heap_aumenta_chave(A, i)
 
-    def peek(self):
-        """Retorna o menor item do heap sem removê-lo."""
-        if not self.is_empty():
-            return self.heap[0]
-        raise IndexError("O heap está vazio.")
+def heap_diminui_chave(A, n, i):
+    j = 2 * i
+    while j <= n:
+        maior = j
+        if maior < n and A[maior] < A[maior + 1]:
+            maior += 1
+        if A[i] < A[maior]:
+            troca(A, i, maior)
+            i = maior
+            j = 2 * i
+        else:
+            j = n + 1
 
-    def change_priority(self, old_value, new_value):
-        """Altera a prioridade de um item no heap."""
-        try:
-            index = self.heap.index(old_value)  # Encontra o índice do valor antigo
-            self.heap[index] = new_value  # Substitui pelo novo valor
-            # Reorganiza o heap dependendo do novo valor
-            if new_value < old_value:
-                self._heapify_up(index)
-            else:
-                self._heapify_down(index)
-        except ValueError:
-            raise ValueError("O valor antigo não foi encontrado no heap.")
+def heap_aumenta_chave(A, i):
+    j = i // 2
+    while i > 1 and A[j] < A[i]:
+        troca(A, i, j)
+        i = j
+        j = i // 2
 
-    def is_empty(self):
-        """Verifica se o heap está vazio."""
-        return len(self.heap) == 0
+def heap_insercao(A, n, chave):
+    A.append(chave)
+    n += 1
+    heap_aumenta_chave(A, n)
 
-    def _heapify_up(self, index):
-        """Reorganiza o heap de baixo para cima."""
-        parent = (index - 1) // 2
-        while index > 0 and self.heap[index] < self.heap[parent]:
-            # Troca o elemento com o pai
-            self.heap[index], self.heap[parent] = self.heap[parent], self.heap[index]
-            index = parent
-            parent = (index - 1) // 2
+def heap_remove(A, n):
+    if n < 1:
+        raise Exception("Heap vazio")
+    maximo = A[1]
+    A[1] = A[n]
+    A.pop()
+    n -= 1
+    heap_diminui_chave(A, n, 1)
+    return maximo
 
-    def _heapify_down(self, index):
-        """Reorganiza o heap de cima para baixo."""
-        smallest = index
-        left_child = 2 * index + 1
-        right_child = 2 * index + 2
+def max_heap(A, n):
+    for i in range(n // 2, 0, -1):
+        heap_diminui_chave(A, n, i)
 
-        # Verifica se o filho esquerdo é menor
-        if left_child < len(self.heap) and self.heap[left_child] < self.heap[smallest]:
-            smallest = left_child
+def imprime_heap(A, index=1, nivel=0):
+    if index < len(A):
+        imprime_heap(A, 2 * index + 1, nivel + 1)
+        print("\t" * nivel + f"-> {A[index]}")
+        imprime_heap(A, 2 * index, nivel + 1)
 
-        # Verifica se o filho direito é menor
-        if right_child < len(self.heap) and self.heap[right_child] < self.heap[smallest]:
-            smallest = right_child
-
-        # Se o menor não for o nó atual, troca e continua
-        if smallest != index:
-            self.heap[index], self.heap[smallest] = self.heap[smallest], self.heap[index]
-            self._heapify_down(smallest)
-
-    def __str__(self):
-        """Retorna uma representação do heap."""
-        return str(self.heap)
-    
-    def display_tree(self, index=0, indent=0):
-        """Exibe a árvore do heap de forma indentada."""
-        if index < len(self.heap):
-            # Exibe o nó atual com a indentação apropriada
-            print(" " * indent + str(self.heap[index]))
-            # Exibe o filho esquerdo
-            self.display_tree(2 * index + 1, indent + 4)
-            # Exibe o filho direito
-            self.display_tree(2 * index + 2, indent + 4)
-
-
-# Exemplo de uso com a lista A
+# Exemplo de uso, pág 14
 if __name__ == "__main__":
-    heap = Heap()
-    A = [16, 15, 10, 14, 7, 9, 3, 2, 8, 1]
-    
-    # Inserindo os elementos da lista A no heap
-    for item in A:
-        heap.insert(item)
-    
-    print("Heap após inserções da lista A:", heap)
+    # Lista de prioridade inicial (índice 0 não é usado)
+    A = [None, 16, 15, 10, 14, 7, 9, 3, 2, 8, 1]
+    n = len(A) - 1
+
+    print("Lista de prioridade inicial:")
+    print(A[1:])
+
     print("\nÁrvore do heap:")
-    heap.display_tree()
+    imprime_heap(A)
+
+    # Exemplo de inserção
+    print("\nInserindo elemento 20:")
+    heap_insercao(A, n, 20)
+    n += 1
+    imprime_heap(A)
+
+    # Exemplo de remoção
+    print("\nRemovendo elemento máximo:")
+    maximo = heap_remove(A, n)
+    n -= 1
+    print(f"Elemento removido: {maximo}")
+    imprime_heap(A)
