@@ -1,91 +1,96 @@
-class NoPatricia:
-    def __init__(self, chave=None, folha=False):
-        self.chave = chave  # Parte da chave armazenada no nó
-        self.esquerda = None  # Subárvore esquerda
-        self.direita = None  # Subárvore direita
-        self.folha = folha  # Indica se é uma folha
+class PatriciaNode:
+    def __init__(self, bit_index=None, key=None):
+        self.bit_index = bit_index  # Índice do bit usado para dividir
+        self.key = key  # Chave armazenada (somente em folhas)
+        self.left = None  # Subárvore esquerda
+        self.right = None  # Subárvore direita
 
-
-class ArvorePatricia:
+class PatriciaTrie:
     def __init__(self):
-        self.raiz = None
+        self.root = None
 
-    def inserir(self, chave_binaria):
-        if not self.raiz:
-            self.raiz = NoPatricia()
-        
-        no_atual = self.raiz
-        for bit in chave_binaria:
-            if bit == '0':
-                if not no_atual.esquerda:
-                    no_atual.esquerda = NoPatricia()
-                no_atual = no_atual.esquerda
-            else:  # bit == '1'
-                if not no_atual.direita:
-                    no_atual.direita = NoPatricia()
-                no_atual = no_atual.direita
-        
-        # Marcar o nó como folha e armazenar a chave
-        no_atual.folha = True
-        no_atual.chave = chave_binaria
+    def insert(self, key, binary_key):
+        if self.root is None:
+            # Primeira chave inserida
+            self.root = PatriciaNode(key=key)
+            return
 
-    def buscar(self, chave_binaria):
-        no_atual = self.raiz
-        for bit in chave_binaria:
-            if bit == '0':
-                if not no_atual.esquerda:
-                    return False
-                no_atual = no_atual.esquerda
-            else:  # bit == '1'
-                if not no_atual.direita:
-                    return False
-                no_atual = no_atual.direita
-        
-        return no_atual.folha and no_atual.chave == chave_binaria
+        current = self.root
+        parent = None
+        direction = None
 
-    def exibir(self, no=None, prefixo="", nivel=0):
-        if no is None:
-            no = self.raiz
-        if no.folha:
-            # Exibir o valor correspondente à chave binária
-            valor = self.converter_binario_para_valor(no.chave)
-            print(" " * (nivel * 4) + f"└── Valor: {valor}")
+        # Caminhar pela árvore até encontrar o ponto de inserção
+        while current.bit_index is not None and current.bit_index < len(binary_key):
+            parent = current
+            direction = 'left' if binary_key[current.bit_index] == '0' else 'right'
+            current = current.left if direction == 'left' else current.right
+
+        # Encontrar o primeiro bit diferente entre a nova chave e a chave existente
+        existing_binary_key = self._key_to_binary(current.key)
+        differing_bit = self._find_first_differing_bit(existing_binary_key, binary_key)
+
+        # Criar um novo nó interno para dividir as chaves
+        new_internal_node = PatriciaNode(bit_index=differing_bit)
+        new_leaf_node = PatriciaNode(key=key)
+
+        # Determinar a direção do novo nó folha
+        if binary_key[differing_bit] == '0':
+            new_internal_node.left = new_leaf_node
+            new_internal_node.right = current
         else:
-            # Exibir os bits diferenciais
-            print(" " * (nivel * 4) + f"└── Bit diferencial: {prefixo}")
-        if no.esquerda:
-            print(" " * (nivel * 4) + "    ├── 0:")
-            self.exibir(no.esquerda, prefixo + "0", nivel + 1)
-        if no.direita:
-            print(" " * (nivel * 4) + "    └── 1:")
-            self.exibir(no.direita, prefixo + "1", nivel + 1)
+            new_internal_node.right = new_leaf_node
+            new_internal_node.left = current
 
-    def converter_binario_para_valor(self, chave_binaria):
-        # Converte a chave binária para o valor correspondente (caractere)
-        return chr(int(chave_binaria, 2) + 65)
+        # Atualizar o pai para apontar para o novo nó interno
+        if parent is None:
+            self.root = new_internal_node
+        else:
+            if direction == 'left':
+                parent.left = new_internal_node
+            else:
+                parent.right = new_internal_node
 
-# Operações com a Árvore Patricia Binária
+    def _key_to_binary(self, key):
+        # Converte a chave para uma representação binária fixa
+        binary_map = {
+            'B': '010010',
+            'J': '100001',
+            'H': '011000',
+            'Q': '101000',
+            'C': '010011',
+            'K': '100010'
+        }
+        return binary_map[key]
+
+    def _find_first_differing_bit(self, key1, key2):
+        # Encontra o primeiro bit diferente entre duas chaves binárias
+        for i in range(min(len(key1), len(key2))):
+            if key1[i] != key2[i]:
+                return i
+        return len(key1)  # Caso todas sejam iguais até o final
+
+    def display(self, node=None, prefix=""):
+        # Exibe a árvore para fins de depuração
+        if node is None:
+            node = self.root
+
+        if node.key is not None:
+            print(f"{prefix}[{node.key}]")
+        else:
+            print(f"{prefix}({node.bit_index})")
+            if node.left:
+                self.display(node.left, prefix + " 0->")
+            if node.right:
+                self.display(node.right, prefix + " 1->")
+
+
+# Exemplo slide pág 11: Uso da árvore PATRICIA
 if __name__ == "__main__":
-    arvore = ArvorePatricia()
+    trie = PatriciaTrie()
+    keys = ['B', 'J', 'H', 'Q', 'C', 'K']
+    for key in keys:
+        binary_key = trie._key_to_binary(key)
+        trie.insert(key, binary_key)
 
-    # Inserindo chaves binárias na Árvore Patricia Binária
-    chaves_binarias = [
-        "010010",  # B
-        "100001",  # J
-        "011000",  # H
-        "101000",  # Q
-        "010011",  # C
-        "100010"   # K
-    ]
-    for chave in chaves_binarias:
-        arvore.inserir(chave)
-
-    # Buscando chaves na Árvore Patricia Binária
-    print("\nBuscando chaves:")
-    for chave in chaves_binarias:
-        print(f"{chave}: {arvore.buscar(chave)}")
-    print("000000:", arvore.buscar("000000"))  # Chave inexistente
-
-    # Exibindo a estrutura da Árvore Patricia Binária
-    print("\nEstrutura da Árvore Patricia Binária:")
-    arvore.exibir()
+    print("Árvore PATRICIA:")
+    trie.display()
